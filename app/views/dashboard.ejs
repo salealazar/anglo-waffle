@@ -1,0 +1,87 @@
+<%- include('partials/header', { active, pageTitle: 'Dashboard de operaciones' }) %>
+
+<section class="kpis">
+  <div class="kpi">
+    <span class="kpi-label">Camiones</span>
+    <span class="kpi-value"><%= fmt(kpis.trucks) %></span>
+    <span class="kpi-sub"><%= fmt(kpis.trucks_active) %> activos</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi-label">Conductores</span>
+    <span class="kpi-value"><%= fmt(kpis.drivers) %></span>
+    <span class="kpi-sub">en planta</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi-label">Viajes</span>
+    <span class="kpi-value"><%= fmt(kpis.trips) %></span>
+    <span class="kpi-sub">registrados</span>
+  </div>
+  <div class="kpi">
+    <span class="kpi-label">Millas recorridas</span>
+    <span class="kpi-value"><%= fmt(kpis.total_miles) %></span>
+    <span class="kpi-sub">acumuladas</span>
+  </div>
+  <div class="kpi kpi-accent">
+    <span class="kpi-label">Ingresos</span>
+    <span class="kpi-value"><%= clp(kpis.total_revenue) %></span>
+    <span class="kpi-sub">últimos 6 meses</span>
+  </div>
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <h3>Ingresos por mes</h3>
+    <canvas id="chartRevenue" height="120"></canvas>
+  </div>
+  <div class="card">
+    <h3>Estado de la flota</h3>
+    <canvas id="chartStatus" height="120"></canvas>
+  </div>
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <h3>Millas por mes</h3>
+    <canvas id="chartMiles" height="120"></canvas>
+  </div>
+  <div class="card">
+    <h3>Top rutas por ingreso</h3>
+    <canvas id="chartRoutes" height="120"></canvas>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  const DATA = <%- JSON.stringify(charts) %>;
+  const palette = ['#2563eb','#0891b2','#16a34a','#d97706','#dc2626','#7c3aed','#0d9488','#ca8a04'];
+  Chart.defaults.font.family = 'system-ui, sans-serif';
+  Chart.defaults.color = '#64748b';
+
+  new Chart(document.getElementById('chartRevenue'), {
+    type: 'line',
+    data: { labels: DATA.months, datasets: [{
+      label: 'CLP', data: DATA.revenue, borderColor: '#2563eb',
+      backgroundColor: 'rgba(37,99,235,.12)', fill: true, tension: .35, pointRadius: 3 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  new Chart(document.getElementById('chartStatus'), {
+    type: 'doughnut',
+    data: { labels: DATA.statusLabels, datasets: [{ data: DATA.statusValues, backgroundColor: palette }] },
+    options: { plugins: { legend: { position: 'right' } } }
+  });
+
+  new Chart(document.getElementById('chartMiles'), {
+    type: 'bar',
+    data: { labels: DATA.months, datasets: [{ label: 'Millas', data: DATA.miles, backgroundColor: '#0891b2' }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  new Chart(document.getElementById('chartRoutes'), {
+    type: 'bar',
+    data: { labels: DATA.routeLabels, datasets: [{ label: 'CLP', data: DATA.routeValues, backgroundColor: '#16a34a' }] },
+    options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+  });
+</script>
+
+<%- include('partials/footer') %>

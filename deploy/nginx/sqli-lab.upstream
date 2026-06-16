@@ -1,0 +1,3 @@
+upstream sqli-lab {
+    server sqli-lab-app:4000;
+}

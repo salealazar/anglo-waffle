@@ -1,0 +1,19 @@
+# Caddy termina TLS y hace de proxy hacia el app. HTTPS automático con
+# Let's Encrypt: requiere que LAB_DOMAIN apunte (DNS A/AAAA) a este host y que
+# los puertos 80 y 443 sean alcanzables desde Internet.
+
+{$LAB_DOMAIN} {
+	encode gzip
+
+	# (Opcional pero MUY recomendado) Lista blanca de IPs: bloquea todo lo que NO
+	# venga de las redes de tu sala/universidad/VPN. Descomenta y ajusta los rangos.
+	# @bloqueado not remote_ip 200.27.0.0/16 127.0.0.1
+	# respond @bloqueado "Acceso restringido a la red del curso." 403
+
+	reverse_proxy app:4000
+
+	log {
+		output stdout
+		format console
+	}
+}

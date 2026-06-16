@@ -1,0 +1,30 @@
+<%- include('partials/header', { active, pageTitle: 'Rutas' }) %>
+
+<div class="card">
+  <div class="filters"><span class="muted"><%= rows.length %> rutas</span></div>
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Ruta</th><th>Origen</th><th>Destino</th>
+        <th class="num">Distancia (mi)</th><th class="num">Cargas</th>
+        <th class="num">Ingreso total</th><th class="num">Ingreso prom.</th><th class="num">Tránsito (días)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.forEach(r => { %>
+        <tr>
+          <td><code><%= r.route_code %></code></td>
+          <td><%= r.origin_city %>, <%= r.origin_state %></td>
+          <td><%= r.destination_city %>, <%= r.destination_state %></td>
+          <td class="num"><%= fmt(r.distance_miles) %></td>
+          <td class="num"><%= fmt(r.loads_count) %></td>
+          <td class="num"><%= clp(r.total_revenue) %></td>
+          <td class="num"><%= clp(r.avg_revenue) %></td>
+          <td class="num"><%= r.avg_transit_days %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('partials/footer') %>

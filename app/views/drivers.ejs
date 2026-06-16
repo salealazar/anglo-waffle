@@ -1,0 +1,43 @@
+<%- include('partials/header', { active, pageTitle: 'Conductores' }) %>
+
+<div class="card">
+  <form class="filters" method="get" action="<%= base %>/conductores">
+    <label>Terminal
+      <select name="terminal" onchange="this.form.submit()">
+        <option value="">Todos</option>
+        <% terminals.forEach(t => { %>
+          <option value="<%= t %>" <%= t === terminal ? 'selected' : '' %>><%= t %></option>
+        <% }) %>
+      </select>
+    </label>
+    <span class="muted"><%= rows.length %> conductores</span>
+  </form>
+
+  <p class="note">Por privacidad, este ranking muestra solo el nombre y la inicial del apellido.</p>
+
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Código</th><th>Conductor</th><th>Terminal</th>
+        <th class="num">Viajes</th><th class="num">Millas</th>
+        <th class="num">A tiempo</th><th class="num">MPG prom.</th><th class="num">Combustible (gal)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.forEach(r => { %>
+        <tr>
+          <td><code><%= r.driver_code %></code></td>
+          <td><strong><%= r.display_name %></strong></td>
+          <td><%= r.home_terminal %></td>
+          <td class="num"><%= fmt(r.trips_completed) %></td>
+          <td class="num"><%= fmt(r.total_miles) %></td>
+          <td class="num"><%= (Number(r.on_time_rate) * 100).toFixed(1) %>%</td>
+          <td class="num"><%= r.avg_mpg %></td>
+          <td class="num"><%= fmt(r.total_fuel_gallons) %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('partials/footer') %>

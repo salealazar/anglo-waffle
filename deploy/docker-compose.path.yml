@@ -1,0 +1,69 @@
+# ============================================================================
+#  DEPLOY bajo un PATH del host de faro (reutilizando su nginx-proxy)
+#  ----------------------------------------------------------------------------
+#  Sirve el lab en  https://<host-de-faro>/sqli-lab  reusando el nginx-proxy
+#  que ya enruta a faro. NO levanta proxy propio: el ruteo lo hace el snippet
+#  nginx/sqli-lab.conf (+ sqli-lab.upstream) que agregas a la config de faro.
+#
+#  AISLAMIENTO (importante):
+#    * sqli-lab-db  -> solo en la red privada `sqli-internal` (NO en nginx-proxy).
+#    * sqli-lab-app -> en `sqli-internal` (para hablar con su BD) y en
+#                      `nginx-proxy` (solo para que el proxy de faro lo alcance).
+#    * Nada publica puertos al host: el único acceso es vía el nginx de faro.
+#
+#  Requiere un .env en esta carpeta (ver .env.example): POSTGRES_PASSWORD,
+#  LAB_BASIC_AUTH y, opcionalmente, BASE_PATH.
+#
+#    Levantar:  docker compose -f docker-compose.path.yml --env-file .env up -d --build
+#
+#  ⚠️  Corre en el MISMO host que faro producción. La SQLi no escala a RCE
+#      (rol no-superusuario, verificado), pero igual: úsalo con time-box y
+#      resetéalo entre clases (down -v).
+# ============================================================================
+services:
+  sqli-lab-db:
+    image: postgres:15-alpine
+    container_name: sqli-lab-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define una clave fuerte en .env}
+      POSTGRES_DB: fleetdb
+    volumes:
+      - ../db:/docker-entrypoint-initdb.d:ro
+      - sqli_lab_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fleetdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [sqli-internal]
+    restart: always
+    # SIN 'ports': la base nunca se expone.
+
+  sqli-lab-app:
+    build: ../app
+    # El nombre del contenedor DEBE coincidir con el "server" del upstream
+    # en nginx/sqli-lab.upstream (server sqli-lab-app:4000).
+    container_name: sqli-lab-app
+    environment:
+      DATABASE_URL: postgresql://fleet_app:fleet_app_pw@sqli-lab-db:5432/fleetdb
+      PORT: "4000"
+      # Debe coincidir con el "location /sqli-lab" del nginx.
+      BASE_PATH: ${BASE_PATH:-/sqli-lab}
+      LAB_BASIC_AUTH: ${LAB_BASIC_AUTH:?define usuario:clave en .env}
+    depends_on:
+      sqli-lab-db:
+        condition: service_healthy
+    networks: [sqli-internal, nginx-proxy]
+    restart: always
+    # SIN 'ports': solo el nginx-proxy de faro lo alcanza por la red interna.
+
+networks:
+  sqli-internal:
+    driver: bridge
+  nginx-proxy:
+    external: true
+    name: nginx-proxy
+
+volumes:
+  sqli_lab_pgdata:

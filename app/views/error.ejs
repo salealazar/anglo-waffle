@@ -1,0 +1,7 @@
+<%- include('partials/header', { active, pageTitle: 'Error' }) %>
+<div class="card alert">
+  <strong>Ocurrió un error.</strong>
+  <pre><%= message %></pre>
+  <p class="muted small">¿La base de datos está levantada y poblada? Revisa <code>docker compose logs db</code>.</p>
+</div>
+<%- include('partials/footer') %>

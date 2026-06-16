@@ -1,0 +1,53 @@
+# ============================================================================
+#  LAB DE INYECCIÓN SQL — stack autocontenido (Postgres + app web)
+#  ----------------------------------------------------------------------------
+#  No comparte NADA con faro: otra base, otros puertos, otra red.
+#
+#    Levantar:   docker compose up --build
+#    App:        http://localhost:4000
+#    Postgres:   localhost:5434  (super: postgres/postgres · app: fleet_app/fleet_app_pw)
+#
+#  Para re-sembrar desde cero (los scripts de db/ solo corren con la BD vacía):
+#    docker compose down -v && docker compose up --build
+# ============================================================================
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: sqli-lab-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fleetdb
+    ports:
+      - "5434:5432"
+    volumes:
+      # Los .sql se ejecutan en orden alfabético la PRIMERA vez que arranca.
+      - ./db:/docker-entrypoint-initdb.d:ro
+      - sqli_lab_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fleetdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [sqli-lab]
+
+  app:
+    build: ./app
+    container_name: sqli-lab-app
+    environment:
+      DATABASE_URL: postgresql://fleet_app:fleet_app_pw@db:5432/fleetdb
+      PORT: "4000"
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [sqli-lab]
+
+volumes:
+  sqli_lab_pgdata:
+
+networks:
+  sqli-lab:
+    driver: bridge

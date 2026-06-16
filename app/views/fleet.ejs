@@ -1,0 +1,41 @@
+<%- include('partials/header', { active, pageTitle: 'Flota' }) %>
+
+<div class="card">
+  <form class="filters" method="get" action="<%= base %>/flota">
+    <label>Estado
+      <select name="status" onchange="this.form.submit()">
+        <option value="">Todos</option>
+        <% statuses.forEach(s => { %>
+          <option value="<%= s %>" <%= s === status ? 'selected' : '' %>><%= s %></option>
+        <% }) %>
+      </select>
+    </label>
+    <span class="muted"><%= rows.length %> unidades</span>
+  </form>
+
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Unidad</th><th>Marca</th><th>Año</th><th>Estado</th><th>Terminal</th>
+        <th class="num">Viajes</th><th class="num">Millas</th><th class="num">MPG prom.</th><th class="num">Utilización</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.forEach(r => { %>
+        <tr>
+          <td><strong><%= r.unit_number %></strong></td>
+          <td><%= r.make %></td>
+          <td><%= r.model_year %></td>
+          <td><span class="badge badge-<%= (r.status||'').toLowerCase() %>"><%= r.status %></span></td>
+          <td><%= r.home_terminal %></td>
+          <td class="num"><%= fmt(r.trips_completed) %></td>
+          <td class="num"><%= fmt(r.total_miles) %></td>
+          <td class="num"><%= r.avg_mpg %></td>
+          <td class="num"><%= (Number(r.utilization_rate) * 100).toFixed(1) %>%</td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('partials/footer') %>

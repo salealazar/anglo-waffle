@@ -1,0 +1,79 @@
+# ============================================================================
+#  DEPLOY ENDURECIDO — exposición a Internet (con TLS + auth básica)
+#  ----------------------------------------------------------------------------
+#  Diferencias clave con el docker-compose.yml de desarrollo:
+#    * La base de datos NO publica ningún puerto (solo vive en la red interna).
+#    * El app NO se publica directo: solo lo alcanza el proxy Caddy.
+#    * Caddy termina TLS (HTTPS automático con Let's Encrypt) y es lo único
+#      expuesto al exterior (80/443).
+#    * Auth básica (clave del curso) vía LAB_BASIC_AUTH.
+#    * Clave del superusuario de Postgres fuerte vía POSTGRES_PASSWORD.
+#
+#  Requiere un archivo .env en esta carpeta (ver .env.example).
+#
+#    Levantar:  docker compose -f docker-compose.deploy.yml --env-file .env up -d --build
+#    Bajar:     docker compose -f docker-compose.deploy.yml down            (conserva datos)
+#    Resetear:  docker compose -f docker-compose.deploy.yml down -v         (borra datos)
+#
+#  ⚠️  Es una app vulnerable A PROPÓSITO. Úsala en un host DESECHABLE y aislado,
+#      enciéndela solo durante la clase y bájala al terminar.
+# ============================================================================
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define una clave fuerte en .env}
+      POSTGRES_DB: fleetdb
+    volumes:
+      - ../db:/docker-entrypoint-initdb.d:ro
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fleetdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [internal]
+    restart: always
+    # SIN sección 'ports': la base NUNCA se publica al exterior.
+
+  app:
+    build: ../app
+    environment:
+      # fleet_app es el rol intencionalmente sobre-privilegiado del lab; su clave
+      # no es una frontera de seguridad (la app está hecha para ser inyectada).
+      DATABASE_URL: postgresql://fleet_app:fleet_app_pw@db:5432/fleetdb
+      PORT: "4000"
+      # Auth básica del curso: "usuario:clave"
+      LAB_BASIC_AUTH: ${LAB_BASIC_AUTH:?define usuario:clave en .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
+    restart: always
+    # SIN 'ports': solo el proxy Caddy lo alcanza por la red interna.
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      LAB_DOMAIN: ${LAB_DOMAIN:?define tu dominio público en .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks: [internal]
+    restart: always
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    driver: bridge

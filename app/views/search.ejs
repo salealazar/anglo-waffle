@@ -1,0 +1,51 @@
+<%- include('partials/header', { active, pageTitle: 'Buscar camión' }) %>
+
+<div class="card">
+  <form class="searchbar" method="get" action="<%= base %>/buscar">
+    <input
+      type="text"
+      name="q"
+      value="<%= q.replace(/"/g, '&quot;') %>"
+      placeholder="Buscar por unidad, marca o terminal… (ej: Volvo, Santiago, U100)"
+      autocomplete="off"
+      autofocus
+    />
+    <button type="submit">Buscar</button>
+  </form>
+  <p class="muted small">Busca dentro del catálogo de flota por número de unidad, marca o terminal.</p>
+</div>
+
+<% if (error) { %>
+  <div class="card alert">
+    <strong>Error en la consulta:</strong>
+    <pre><%= error %></pre>
+  </div>
+<% } %>
+
+<% if (submitted && !error) { %>
+  <div class="card">
+    <div class="filters">
+      <span class="muted"><%= rows.length %> resultado(s) para "<%= q %>"</span>
+    </div>
+    <% if (rows.length === 0) { %>
+      <p class="note">Sin coincidencias.</p>
+    <% } else { %>
+      <table class="data">
+        <thead>
+          <tr><% columns.forEach(c => { %><th><%= c %></th><% }) %></tr>
+        </thead>
+        <tbody>
+          <% rows.forEach(r => { %>
+            <tr>
+              <% columns.forEach(c => { %>
+                <td><%= r[c] === null || r[c] === undefined ? '' : r[c] %></td>
+              <% }) %>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+<% } %>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TransAndes Analytics — Panel de Flota</title>
+  <link rel="stylesheet" href="<%= base %>/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">TA</div>
+        <div class="brand-text">
+          <strong>TransAndes</strong>
+          <span>Analytics</span>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="<%= base %>/"            class="<%= active === 'dashboard'   ? 'on' : '' %>"><span>▣</span> Dashboard</a>
+        <a href="<%= base %>/flota"       class="<%= active === 'flota'       ? 'on' : '' %>"><span>▤</span> Flota</a>
+        <a href="<%= base %>/conductores" class="<%= active === 'conductores' ? 'on' : '' %>"><span>☺</span> Conductores</a>
+        <a href="<%= base %>/rutas"       class="<%= active === 'rutas'       ? 'on' : '' %>"><span>➔</span> Rutas</a>
+        <a href="<%= base %>/buscar"      class="<%= active === 'buscar'      ? 'on' : '' %>"><span>⌕</span> Buscar</a>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="env-pill">DEMO</span>
+        <small>v1.0 · Logística Andes</small>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div class="topbar-title"><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Panel de Flota' %></div>
+        <div class="topbar-user">
+          <span class="dot"></span> Sesión: operaciones@transandes.cl
+        </div>
+      </header>
+      <div class="page">
